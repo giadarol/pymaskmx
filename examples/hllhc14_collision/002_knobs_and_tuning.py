@@ -9,7 +9,9 @@ with open('config_knobs_and_tuning.yaml','r') as fid:
     configuration = yaml.safe_load(fid)
 
 # Load collider
-with open('collider_01_bb_off.json', 'r') as fid:
+# with open('collider_01_bb_off.json', 'r') as fid:
+#     collider = xt.Multiline.from_dict(json.load(fid))
+with open('collider_00_from_mad.json', 'r') as fid:
     collider = xt.Multiline.from_dict(json.load(fid))
 
 # Load orbit correction configuration
@@ -64,13 +66,18 @@ for line_name in ['lhcb1', 'lhcb2']:
             xt.Target('dqy', configuration['dqy'][line_name], tol=0.05)])
 
 # Configure beam-beam lenses
-print('Configuring beam-beam lenses...')
-collider.configure_beambeam_interactions(
-    num_particles=2.2e11,
-    nemitt_x=2e-6, nemitt_y=3e-6)
+# print('Configuring beam-beam lenses...')
+# collider.configure_beambeam_interactions(
+#     num_particles=2.2e11,
+#     nemitt_x=2e-6, nemitt_y=3e-6)
 
 
-with open('collider_02_bb_on.json', 'w') as fid:
+# with open('collider_02_bb_on.json', 'w') as fid:
+#     dct = collider.to_dict()
+#     json.dump(dct, fid, cls=xo.JEncoder)
+
+
+with open('collider_02_no_bb.json', 'w') as fid:
     dct = collider.to_dict()
     json.dump(dct, fid, cls=xo.JEncoder)
 
