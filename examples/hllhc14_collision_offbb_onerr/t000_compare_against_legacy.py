@@ -22,12 +22,9 @@ with open('collider_02_no_bb.json', 'r') as fid:
 ltest = collider['lhcb1']
 
 lref = xt.Line.from_json('/home/sterbini/2023_03_06_xsuite_test/lhcmask/python_examples/'
-                        'hl_lhc_collisions_python_offbb_offerrors/xsuite_lines/line_bb_for_tracking.json')
+                        'hl_lhc_collisions_python_offbb_onerrors/xsuite_lines/line_bb_for_tracking.json')
 
-# we swithch off the mqs
-for nn in lref.element_names:
-    if nn.startswith('mqs.'):
-        lref[nn].ksl[1]=0
+
 
 # we swithch off the dipolar elements very weakly powered
 for ll in (lref, ltest):
@@ -38,7 +35,9 @@ for ll in (lref, ltest):
             if np.abs(ee.ksl[0])<1e-9:
                 ee.ksl[0] = 0
 
-
+# It seems that MADX does not like the coupling of the matching
+lref.vars['cmrskew'] = ltest.vars['c_minus_re_b1']
+lref.vars['cmiskew'] = ltest.vars['c_minus_im_b1']
 
 lref.particle_ref = ltest.particle_ref
 lref.build_tracker()
@@ -92,6 +91,7 @@ assert (lref.get_length() - original_length) < 1e-6
 for ii, (ee_test, ee_six, nn_test, nn_six) in enumerate(
     zip(ltest.elements, lref.elements, ltest.element_names, lref.element_names)
 ):
+    print(f'Checking element {ii} {nn_test} {nn_six}         ', end='\r', flush=True)
     assert type(ee_test) == type(ee_six)
 
     dtest = ee_test.to_dict()

@@ -41,11 +41,11 @@ knob_settings:
 
 # Tunes and chromaticities
 qx:
-  lhcb1: 62.31002341496359
-  lhcb2: 62.31002341496359
+  lhcb1: 62.31002861949048
+  lhcb2: 62.31
 qy:
-  lhcb1: 60.320009269672276
-  lhcb2: 60.320009269672276
+  lhcb1: 60.320017490213004
+  lhcb2: 60.32
 dqx:
   lhcb1: 5
   lhcb2: 5
