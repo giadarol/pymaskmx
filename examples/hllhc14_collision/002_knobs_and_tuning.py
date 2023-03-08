@@ -52,7 +52,7 @@ for line_name in ['lhcb1', 'lhcb2']:
 
     # Match tune and chromaticity
     print(f'Matching tune and chromaticity for {line_name}')
-    collider[line_name].match(verbose=True,
+    collider[line_name].match(verbose=False,
         vary=[
             xt.Vary(knob_names['q_knob_1'], step=1e-8),
             xt.Vary(knob_names['q_knob_2'], step=1e-8),
@@ -60,10 +60,10 @@ for line_name in ['lhcb1', 'lhcb2']:
             xt.Vary(knob_names['dq_knob_2'], step=1e-4),
         ],
         targets = [
-            xt.Target('qx', configuration['qx'][line_name], tol=1e-4),
-            xt.Target('qy', configuration['qy'][line_name], tol=1e-4),
-            xt.Target('dqx', configuration['dqx'][line_name], tol=0.05),
-            xt.Target('dqy', configuration['dqy'][line_name], tol=0.05)])
+            xt.Target('qx', configuration['qx'][line_name], tol=1e-5),
+            xt.Target('qy', configuration['qy'][line_name], tol=1e-5),
+            xt.Target('dqx', configuration['dqx'][line_name], tol=0.01),
+            xt.Target('dqy', configuration['dqy'][line_name], tol=0.01)])
 
 # Configure beam-beam lenses
 # print('Configuring beam-beam lenses...')
