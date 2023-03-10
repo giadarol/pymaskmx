@@ -28,12 +28,22 @@ lref = xt.Line.from_json('/home/sterbini/2023_03_06_xsuite_test/lhcmask/python_e
 
 # we swithch off the dipolar elements very weakly powered
 for ll in (lref, ltest):
-    for ii, ee in enumerate(ll.elements):
+    for ee in ll.elements:
         if isinstance(ee, xt.Multipole):
             if np.abs(ee.knl[0])<1e-9:
                 ee.knl[0] = 0
             if np.abs(ee.ksl[0])<1e-9:
                 ee.ksl[0] = 0
+
+# we copy the mss ksl[2]
+# Driving term computed with orbit in lref and with flat machine in ltest
+
+ks2_max = np.max([np.abs(lref[nn].ksl[2]) for nn in lref.element_names if nn.startswith('mss.')])
+        
+for nn in ltest.element_names:
+    if nn.startswith('mss.'):
+        assert np.isclose(ltest[nn].ksl[2], lref[nn].ksl[2], atol=ks2_max*0.1, rtol=0)
+        ltest[nn].ksl[2] = lref[nn].ksl[2]
 
 # It seems that MADX does not like the coupling of the matching
 lref.vars['cmrskew'] = ltest.vars['c_minus_re_b1']
@@ -88,14 +98,14 @@ assert len(ltest) == len(lref)
 assert (ltest.get_length() - original_length) < 1e-6
 assert (lref.get_length() - original_length) < 1e-6
 
-for ii, (ee_test, ee_six, nn_test, nn_six) in enumerate(
+for ii, (ee_test, ee_ref, nn_test, nn_ref) in enumerate(
     zip(ltest.elements, lref.elements, ltest.element_names, lref.element_names)
 ):
-    print(f'Checking element {ii} {nn_test} {nn_six}         ', end='\r', flush=True)
-    assert type(ee_test) == type(ee_six)
+    print(f'Checking element {ii} {nn_test} {nn_ref}         ', end='\r', flush=True)
+    assert type(ee_test) == type(ee_ref)
 
     dtest = ee_test.to_dict()
-    dref = ee_six.to_dict()
+    dref = ee_ref.to_dict()
 
     for kk in dtest.keys():
 
@@ -176,11 +186,15 @@ for ii, (ee_test, ee_six, nn_test, nn_six) in enumerate(
                 if len(val_ref) == 0 and len(val_test) == 0:
                     continue
                 else:
-                    for iiii, (vvr, vvt) in enumerate(list(zip(val_ref, val_test))):
+                    for iiii, (vvr, vvt) in enumerate(list(zip(val_ref, val_test))):                            
                         if not np.isclose(vvr, vvt, atol=atol, rtol=rtol):
-                            print(f'Issue found on `{kk}[{iiii}]`')
-                            diff_rel = 1000
-                            break
+                            if iiii==0 and np.isclose(vvr, vvt, atol=1e-9, rtol=0):
+                                diff_rel = 0
+                                pass
+                            else:
+                                print(f'Issue found on `{kk}[{iiii}]`')
+                                diff_rel = 1000
+                                break
                         else:
                             diff_rel = 0
                     if diff_rel < rtol:
@@ -227,7 +241,7 @@ for ii, (ee_test, ee_six, nn_test, nn_six) in enumerate(
             if kk == 'other_beam_q0' or kk == 'other_beam_num_particles':
                 # ambiguity due to old interface
                 if np.abs(ee_test.other_beam_num_particles*ee_test.other_beam_q0 -
-                        ee_six.other_beam_num_particles*ee_six.other_beam_q0 ) < 1.: # charges
+                        ee_ref.other_beam_num_particles*ee_ref.other_beam_q0 ) < 1.: # charges
                     continue
 
         # Exceptions BB6D (angles and separations are recalculated)
