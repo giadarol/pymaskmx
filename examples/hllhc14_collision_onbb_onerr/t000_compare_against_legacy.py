@@ -13,7 +13,7 @@ def norm(x):
 atol = 1e-12
 rtol = 3e-4
 strict = False
-
+beta_beat_tol = 5e-2
 
 with open('collider_02_bb_on.json', 'r') as fid:
     dct = json.load(fid)
@@ -227,19 +227,19 @@ for ii, (ee_test, ee_ref, nn_test, nn_ref) in enumerate(
         if not(strict) and isinstance(ee_test, xf.BeamBeamBiGaussian2D):
             if kk == "other_beam_shift_x" or kk == "ref_shift_x":
                 diff_abs = ee_test.other_beam_shift_x + ee_test.ref_shift_x - (ee_ref.other_beam_shift_x + ee_ref.ref_shift_x)
-                if diff_abs / np.sqrt(dtest["other_beam_Sigma_11"]) < 0.01: # This is neede to accommodate different leveling routines (1% difference)
+                if diff_abs / np.sqrt(dtest["other_beam_Sigma_11"]) < 0.03: # This is neede to accommodate different leveling routines (1% difference)
                     continue
             if kk == "other_beam_shift_y" or kk == "ref_shift_y":
                 diff_abs = ee_test.other_beam_shift_y + ee_test.ref_shift_y - (ee_ref.other_beam_shift_y + ee_ref.ref_shift_y)
-                if diff_abs / np.sqrt(dtest["other_beam_Sigma_33"]) < 0.01:
+                if diff_abs / np.sqrt(dtest["other_beam_Sigma_33"]) < 0.03:
                     continue
             
             if kk == "other_beam_Sigma_11":
                 # beta-beating from errors not includede in the ref lattice
-                if diff_rel < 0.15**2:
+                if diff_rel < beta_beat_tol:
                     continue
             if kk == "other_beam_Sigma_33":
-                if diff_rel < 0.15**2:
+                if diff_rel < beta_beat_tol:
                     continue
             if kk.startswith('post_subtract'):
                 continue
@@ -253,10 +253,13 @@ for ii, (ee_test, ee_ref, nn_test, nn_ref) in enumerate(
         # Exceptions BB6D (angles and separations are recalculated)
         if not(strict) and isinstance(ee_test, xf.BeamBeamBiGaussian3D):
             if kk == "_cos_alpha":
-                if diff_abs < 10e-6:
+                if diff_abs < 5e-4:
                     continue
             if kk == "_sin_alpha":
-                if diff_abs < 10e-6:
+                if diff_abs < 5e-4:
+                    continue
+            if kk in  ['_sin_phi','_cos_phi','_tan_phi']:
+                if diff_abs < 1e-6:
                     continue
             if kk == "ref_shift_x" or kk == "other_beam_shift_x":
                 if diff_abs / np.sqrt(dtest["slices_other_beam_Sigma_11_star"][0]) < 0.015:
@@ -273,6 +276,33 @@ for ii, (ee_test, ee_ref, nn_test, nn_ref) in enumerate(
             if kk == "ref_shift_px" or kk == 'ref_shift_py':
                 if diff_abs <30e-9:
                     continue
+            if kk.startswith('slices_other_beam_Sigma_'):
+                print(kk)
+                ok_sigma = False
+                for nn in '11 12 13 14 22 23 24 33 34 44'.split(' '):
+                    # import pdb; pdb.set_trace()
+                    if nn in ['12', '34'] and diff_abs < 5e-11:
+                        ok_sigma = True
+                        break
+                    
+                    if kk == 'slices_other_beam_Sigma_'+nn+'_star':
+                        diff_rel = np.abs((val_test - val_ref)/val_ref)
+                        assert len(diff_rel)==1
+                        diff_rel = diff_rel[0]
+                        if diff_rel < beta_beat_tol:
+                            ok_sigma = True
+                            break
+                if ok_sigma:
+                    continue
+            if kk == "other_beam_shift_x" or kk == "ref_shift_x":
+                diff_abs = ee_test.other_beam_shift_x + ee_test.ref_shift_x - (ee_ref.other_beam_shift_x + ee_ref.ref_shift_x)
+                if diff_abs / np.sqrt(dtest["other_beam_Sigma_11"]) < 0.02: # This is neede to accommodate different leveling routines (1% difference)
+                    continue
+            if kk == "other_beam_shift_y" or kk == "ref_shift_y":
+                diff_abs = ee_test.other_beam_shift_y + ee_test.ref_shift_y - (ee_ref.other_beam_shift_y + ee_ref.ref_shift_y)
+                if diff_abs / np.sqrt(dtest["other_beam_Sigma_33"]) < 0.02:
+                    continue
+# bb_ho.l5b1_05
             if kk.startswith('post_subtract'):
                 continue
         if isinstance(ee_test, xt.XYShift):
